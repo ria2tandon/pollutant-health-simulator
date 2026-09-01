@@ -68,55 +68,55 @@ class Agent:
                     self.state = 'deceased'
 
     def move(self, grid_size, pollution_grid, occupied_positions):
-      if self.state == 'deceased':
-          return
+        if self.state == 'deceased':
+            return
 
-      original_pos = (self.x, self.y)
-      moved = False
+        original_pos = (self.x, self.y)
+        moved = False
 
-      if random.random() < self.mobility:
-          current_pollution = pollution_grid[int(self.y), int(self.x)]
-          possible_moves = []
+        if random.random() < self.mobility:
+            current_pollution = pollution_grid[int(self.y), int(self.x)]
+            possible_moves = []
 
-          for dx in [-1, 0, 1]:
-              for dy in [-1, 0, 1]:
-                  if dx == 0 and dy == 0:  # Ignore current location
-                      continue
+            for dx in [-1, 0, 1]:
+                for dy in [-1, 0, 1]:
+                    if dx == 0 and dy == 0:  # Ignore current location
+                        continue
 
-                  new_x = int(self.x + dx)
-                  new_y = int(self.y + dy)
+                    new_x = int(self.x + dx)
+                    new_y = int(self.y + dy)
 
-                  # Ensure new_x and new_y are within bounds
-                  if 0 <= new_x < grid_size and 0 <= new_y < grid_size:
-                      # Check if position is occupied (only considering the set of occupied positions)
-                      if (new_x, new_y) not in occupied_positions:
-                          # Check pollution levels before moving
-                          move_pollution = pollution_grid[new_y, new_x]
-                          if self.ses == 'high' and move_pollution < current_pollution:
-                              possible_moves.append((new_x, new_y, move_pollution))
-                          elif self.ses == 'low' and move_pollution < current_pollution:
-                              possible_moves.append((new_x, new_y, move_pollution))
+                    # Ensure new_x and new_y are within bounds
+                    if 0 <= new_x < grid_size and 0 <= new_y < grid_size:
+                        # Check if position is occupied (only considering the set of occupied positions)
+                        if (new_x, new_y) not in occupied_positions:
+                            # Check pollution levels before moving
+                            move_pollution = pollution_grid[new_y, new_x]
+                            if self.ses == 'high' and move_pollution < current_pollution:
+                                possible_moves.append((new_x, new_y, move_pollution))
+                            elif self.ses == 'low' and move_pollution < current_pollution:
+                                possible_moves.append((new_x, new_y, move_pollution))
 
-          if possible_moves:
-              pollution_values = [x[2] for x in possible_moves]
-              min_pollution_index = pollution_values.index(min(pollution_values))
-              best_x, best_y, _ = possible_moves[min_pollution_index]
+            if possible_moves:
+                pollution_values = [x[2] for x in possible_moves]
+                min_pollution_index = pollution_values.index(min(pollution_values))
+                best_x, best_y, _ = possible_moves[min_pollution_index]
 
-              # Only remove original position from occupied positions if it's present
-              if original_pos in occupied_positions:
-                  occupied_positions.remove(original_pos)
+                # Only remove original position from occupied positions if it's present
+                if original_pos in occupied_positions:
+                    occupied_positions.remove(original_pos)
 
-              # Add the new position to the occupied positions
-              if (best_x, best_y) not in occupied_positions:
-                  self.x, self.y = best_x, best_y
-                  moved = True
+                # Add the new position to the occupied positions
+                if (best_x, best_y) not in occupied_positions:
+                    self.x, self.y = best_x, best_y
+                    moved = True
 
-          if moved:
-              occupied_positions.add((self.x, self.y))
-          else:
-              occupied_positions.add(original_pos)
-      else:
-          occupied_positions.add(original_pos)
+            if moved:
+                occupied_positions.add((self.x, self.y))
+            else:
+                occupied_positions.add(original_pos)
+        else:
+            occupied_positions.add(original_pos)
 
 
 
