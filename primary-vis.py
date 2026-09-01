@@ -4,6 +4,7 @@ import random
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.patches import Patch
 
+# MAKE OUTPUT WRITE TO A FILE
 
 # Resident class class
 class Agent:
