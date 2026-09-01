@@ -6,6 +6,118 @@ from matplotlib.patches import Patch
 
 
 # Resident class class
+class Agent:
+    def __init__(self, id, x, y, ses, mobility):
+        self.id = id
+        self.x = x  # Coordinate x and y values
+        self.y = y
+        self.ses = ses  # 'low' or 'high'
+        self.mobility = mobility  # 0–1 value, basically percent chance they have to be able to move
+        self.state = 'healthy'  # 'healthy','sick','chronic','deceased'
+
+    # Update agent state based on pollution
+    def update_state(self, pollution_grid, grid_size):
+        if self.state == 'deceased':
+            return
+
+        # Calculate pollution in Moore neighborhood (3x3)
+        pollution_val = 0
+        max_pollution = 0
+        count = 0
+        for dx in [-1, 0, 1]:
+            for dy in [-1, 0, 1]:
+                nx, ny = int(self.x + dx), int(self.y + dy)
+                if 0 <= nx < grid_size and 0 <= ny < grid_size:
+                    cell_pollution = pollution_grid[nx, ny]
+                    pollution_val += cell_pollution
+                    max_pollution = max(max_pollution, cell_pollution)
+                    count += 1
+
+        avg_pollution = pollution_val / max(count, 1)
+
+        # Compound effect so it affects agents non-linearly
+        pollution_effect = min(1.0, max_pollution)  # worst nearby cell
+        compound_effect = pollution_effect ** 3
+
+        # Health impacts can only happen above pollution threshold
+        p = pollution_grid[self.y, self.x]
+        if p > 0.05:
+            if self.state == 'healthy':
+                sickness_prob = p * 3
+                if random.random() < sickness_prob:
+                    self.state = 'sick'
+
+            elif self.state == 'sick':
+                death_prob = 0.4 * compound_effect / 3
+
+                # Recovery is harder in polluted areas
+                recovery_chance = 0.7 * (1 - compound_effect)
+
+                # Either recover, die, or become chronic
+                if random.random() < recovery_chance:
+                    self.state = 'healthy'
+                elif random.random() < death_prob:
+                    self.state = 'deceased'
+                else:
+                    self.state = 'chronic'
+
+            elif self.state == 'chronic':
+                # Can't become healthy again
+                death_prob = 0.05 * compound_effect / 3
+                if random.random() < death_prob:
+                    self.state = 'deceased'
+
+    def move(self, grid_size, pollution_grid, occupied_positions):
+      if self.state == 'deceased':
+          return
+
+      original_pos = (self.x, self.y)
+      moved = False
+
+      if random.random() < self.mobility:
+          current_pollution = pollution_grid[int(self.y), int(self.x)]
+          possible_moves = []
+
+          for dx in [-1, 0, 1]:
+              for dy in [-1, 0, 1]:
+                  if dx == 0 and dy == 0:  # Ignore current location
+                      continue
+
+                  new_x = int(self.x + dx)
+                  new_y = int(self.y + dy)
+
+                  # Ensure new_x and new_y are within bounds
+                  if 0 <= new_x < grid_size and 0 <= new_y < grid_size:
+                      # Check if position is occupied (only considering the set of occupied positions)
+                      if (new_x, new_y) not in occupied_positions:
+                          # Check pollution levels before moving
+                          move_pollution = pollution_grid[new_y, new_x]
+                          if self.ses == 'high' and move_pollution < current_pollution:
+                              possible_moves.append((new_x, new_y, move_pollution))
+                          elif self.ses == 'low' and move_pollution < current_pollution:
+                              possible_moves.append((new_x, new_y, move_pollution))
+
+          if possible_moves:
+              pollution_values = [x[2] for x in possible_moves]
+              min_pollution_index = pollution_values.index(min(pollution_values))
+              best_x, best_y, _ = possible_moves[min_pollution_index]
+
+              # Only remove original position from occupied positions if it's present
+              if original_pos in occupied_positions:
+                  occupied_positions.remove(original_pos)
+
+              # Add the new position to the occupied positions
+              if (best_x, best_y) not in occupied_positions:
+                  self.x, self.y = best_x, best_y
+                  moved = True
+
+          if moved:
+              occupied_positions.add((self.x, self.y))
+          else:
+              occupied_positions.add(original_pos)
+      else:
+          occupied_positions.add(original_pos)
+
 
 
 
